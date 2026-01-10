@@ -2,12 +2,19 @@ package common
 
 import (
 	"os"
+	"runtime"
 	"strings"
 )
 
 func GetEnvPath() string {
 	pwd, _ := os.Getwd()
-	segments := strings.Split(pwd, "/")
+
+	var splitter string = "/"
+	if runtime.GOOS == "windows" {
+		splitter = "\\"
+	}
+
+	segments := strings.Split(pwd, splitter)
 
 	absolutePath := make([]string, 0, len(segments))
 	appRootFound := false
@@ -23,7 +30,7 @@ func GetEnvPath() string {
 		panic("Repository root dir should be called \"tcp\". Otherwise needs to change implementation of getEnvPath() function.")
 	}
 
-	envPath := strings.Join(absolutePath, "/") + "/.env"
+	envPath := strings.Join(absolutePath, splitter) + splitter + ".env"
 
 	return envPath
 }
