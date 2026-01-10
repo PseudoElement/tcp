@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+
+	"github.com/pseudoelement/tcp/common"
 )
 
 type TcpTunnelClient struct {
@@ -65,8 +67,8 @@ func (t *TcpTunnelClient) handleCommand(command string) {
 		cmdErrString = cmdErr.Error()
 	}
 
-	_, outErr := t.serverConn.Write([]byte("Command output:\n" + cmdOut + "\n"))
-	_, errErr := t.serverConn.Write([]byte("Command error:\n" + cmdErrString + "\n"))
+	_, outErr := t.serverConn.Write([]byte("Command output:\n" + cmdOut + string(common.END_OF_MSG)))
+	_, errErr := t.serverConn.Write([]byte("Command error:\n" + cmdErrString + string(common.END_OF_MSG)))
 
 	if outErr != nil {
 		t.errorChan <- outErr

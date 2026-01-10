@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"net"
+
+	"github.com/pseudoelement/tcp/common"
 )
 
 type TcpTunnel struct {
@@ -56,9 +58,7 @@ func (t *TcpTunnel) Run() {
 func (t *TcpTunnel) readDataFromClient() {
 	reader := bufio.NewReader(t.clientConn)
 	for {
-		// buf := make([]byte, 1024)
-		// nr, err := t.clientConn.Read(buf)
-		buf, _, err := reader.ReadLine()
+		buf, err := reader.ReadBytes(common.END_OF_MSG)
 		if err != nil {
 			if err == io.EOF {
 				log.Println("[TcpTunnel_readDataFromClient] client closed connection")
