@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -23,8 +24,6 @@ func main() {
 	serverPort := os.Getenv("SERVER_PORT")
 	serverAddress := serverIp + ":" + serverPort
 
-	println("Server address: ", serverAddress)
-
 	conn, err := net.Dial("tcp", serverAddress)
 	if err != nil {
 		log.Fatalf("Error connecting to %s. Error: %v\n", serverAddress, err)
@@ -34,17 +33,24 @@ func main() {
 	fmt.Printf("Connected to server at %s\n", serverAddress)
 
 	randomInt := strconv.Itoa(rand.Intn(1000))
-	// Example: send a message
 	if _, err := conn.Write([]byte("Hello from a different IP " + randomInt + "!\n")); err != nil {
 		log.Fatal(err)
 	}
 
-	// @TODO add infinite loop with reading incoming messages
-	// Read response (optional)
-	buf := make([]byte, 1024)
-	n, err := conn.Read(buf)
-	if err != nil && err != io.EOF {
-		log.Fatal(err)
+	// @TODO evaluate message starting with $ as command
+	// otherwise just type text in new file
+	for {
+		buf := make([]byte, 1024)
+		n, err := conn.Read(buf)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				log.Println("[client_main] server closed connection")
+				return
+			}
+			log.Println("[client_main] read failed: ", err.Error())
+			return
+		}
+
+		fmt.Printf("Received msg: %s\n", string(buf[:n]))
 	}
-	fmt.Printf("Received: %s\n", string(buf[:n]))
 }
