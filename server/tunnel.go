@@ -59,6 +59,8 @@ func (t *TcpTunnel) readDataFromClient() {
 	reader := bufio.NewReader(t.clientConn)
 	for {
 		buf, err := reader.ReadBytes(common.END_OF_MSG)
+		log.Println("Data from client: ", string(buf))
+
 		if err != nil {
 			if err == io.EOF {
 				log.Println("[TcpTunnel_readDataFromClient] client closed connection")
@@ -67,8 +69,6 @@ func (t *TcpTunnel) readDataFromClient() {
 			log.Println("[TcpTunnel_readDataFromClient] read failed: ", err.Error())
 			return
 		}
-
-		log.Println("Data from client: ", string(buf))
 	}
 }
 
