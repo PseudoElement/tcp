@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"io"
 	"log"
 	"net"
@@ -53,9 +54,11 @@ func (t *TcpTunnel) Run() {
 }
 
 func (t *TcpTunnel) readDataFromClient() {
+	reader := bufio.NewReader(t.clientConn)
 	for {
-		buf := make([]byte, 1024)
-		nr, err := t.clientConn.Read(buf)
+		// buf := make([]byte, 1024)
+		// nr, err := t.clientConn.Read(buf)
+		buf, _, err := reader.ReadLine()
 		if err != nil {
 			if err == io.EOF {
 				log.Println("[TcpTunnel_readDataFromClient] client closed connection")
@@ -65,7 +68,7 @@ func (t *TcpTunnel) readDataFromClient() {
 			return
 		}
 
-		log.Println("Data from client: ", string(buf[0:nr]))
+		log.Println("Data from client: ", string(buf))
 	}
 }
 

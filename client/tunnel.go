@@ -3,16 +3,18 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"net"
 )
 
 type TcpTunnelClient struct {
 	serverConn net.Conn
+	errorChan  chan error
 }
 
 func NewTcpTunnelClient() TcpTunnelClient {
-	return TcpTunnelClient{}
+	return TcpTunnelClient{
+		errorChan: make(chan error),
+	}
 }
 
 func (t *TcpTunnelClient) Connect(serverAddress string) error {
@@ -37,33 +39,39 @@ func (t *TcpTunnelClient) Run() error {
 
 	reader := bufio.NewReader(t.serverConn)
 	for {
-		buf, _, err := reader.ReadLine()
-		inMsg := string(buf)
-		if err != nil {
-			if err == io.EOF {
-				return io.EOF
-			}
+		select {
+		case err := <-t.errorChan:
 			return err
-		}
-
-		fmt.Printf("Msg from server: %s\n", inMsg)
-
-		if isCommand(inMsg) {
-			cmdOut, cmdErr := execute(inMsg)
-			cmdErrString := ""
-			if cmdErr != nil {
-				cmdErrString = cmdErr.Error()
+		default:
+			buf, _, err := reader.ReadLine()
+			inMsg := string(buf)
+			if err != nil {
+				return err
 			}
 
-			_, outErr := t.serverConn.Write([]byte("Command output:\n" + cmdOut))
-			_, errErr := t.serverConn.Write([]byte("Command error:\n" + cmdErrString))
+			fmt.Printf("Msg from server: %s\n", inMsg)
 
-			if outErr != nil {
-				return outErr
-			}
-			if errErr != nil {
-				return errErr
+			if isCommand(inMsg) {
+				go t.handleCommand(inMsg)
 			}
 		}
+	}
+}
+
+func (t *TcpTunnelClient) handleCommand(command string) {
+	cmdOut, cmdErr := execute(command)
+	cmdErrString := ""
+	if cmdErr != nil {
+		cmdErrString = cmdErr.Error()
+	}
+
+	_, outErr := t.serverConn.Write([]byte("Command output:\n" + cmdOut + "\n"))
+	_, errErr := t.serverConn.Write([]byte("Command error:\n" + cmdErrString + "\n"))
+
+	if outErr != nil {
+		t.errorChan <- outErr
+	}
+	if errErr != nil {
+		t.errorChan <- errErr
 	}
 }
