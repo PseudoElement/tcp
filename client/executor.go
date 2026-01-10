@@ -7,9 +7,9 @@ import (
 
 func execute(msg string) (outMsg string, err error) {
 	command := strings.TrimPrefix(msg, "$ ")
-	cmdSegments := strings.Split(command, " ")
 
-	cmd := exec.Command(cmdSegments[0], cmdSegments[1:]...)
+	// Use shell to interpret pipes, redirects, etc.
+	cmd := exec.Command("sh", "-c", command)
 	out, err := cmd.Output()
 	outMsg = string(out)
 
