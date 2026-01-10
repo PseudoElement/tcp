@@ -36,7 +36,7 @@ func (t *TcpTunnel) Id() int {
 }
 
 func (t *TcpTunnel) Close() error {
-	t.closeChan <- struct{}{}
+	close(t.closeChan)
 	return t.clientConn.Close()
 }
 
