@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"io"
 	"log"
 	"net"
@@ -56,9 +55,9 @@ func (t *TcpTunnel) Run() {
 func (t *TcpTunnel) readDataFromClient() {
 	for {
 		buf := make([]byte, 1024)
-		_, err := t.clientConn.Read(buf)
+		nr, err := t.clientConn.Read(buf)
 		if err != nil {
-			if errors.Is(err, io.EOF) {
+			if err == io.EOF {
 				log.Println("[TcpTunnel_readDataFromClient] client closed connection")
 				return
 			}
@@ -66,7 +65,7 @@ func (t *TcpTunnel) readDataFromClient() {
 			return
 		}
 
-		log.Println("Data from client: ", string(buf))
+		log.Println("Data from client: ", string(buf[0:nr]))
 	}
 }
 
@@ -76,12 +75,12 @@ func (t *TcpTunnel) writeMessagesToClient() {
 		case <-t.closeChan:
 			return
 		case commandToClient := <-t.commandToClientChan:
-			_, err := t.clientConn.Write([]byte(commandToClient))
+			_, err := t.clientConn.Write([]byte(commandToClient + "\n"))
 			if err != nil {
 				println("[TcpTunnel_writeMessagesToClient] t.clientConn.Write failed: " + err.Error())
 			}
 
-			log.Printf("\"$ %s\" sent to client", commandToClient)
+			log.Printf("\"%s\" sent to client", commandToClient)
 		}
 	}
 }

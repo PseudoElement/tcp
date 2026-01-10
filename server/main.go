@@ -24,7 +24,7 @@ func main() {
 	}
 	defer l.Close()
 
-	log.Println("Server listening on address ", serverAddress)
+	log.Println("Server listening on address", serverAddress)
 
 	tcpService := NewTcpService(l)
 	inputReader := NewInputReader(tcpService.Tunnels)

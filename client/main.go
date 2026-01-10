@@ -1,14 +1,9 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"io"
 	"log"
-	"math/rand"
-	"net"
 	"os"
-	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/pseudoelement/tcp/common"
@@ -24,33 +19,25 @@ func main() {
 	serverPort := os.Getenv("SERVER_PORT")
 	serverAddress := serverIp + ":" + serverPort
 
-	conn, err := net.Dial("tcp", serverAddress)
+	connectWithRetries(serverAddress)
+}
+
+func connectWithRetries(serverAddress string) {
+	tunnel := NewTcpTunnelClient()
+
+	err := tunnel.Connect(serverAddress)
 	if err != nil {
-		log.Fatalf("Error connecting to %s. Error: %v\n", serverAddress, err)
-	}
-	defer conn.Close()
+		log.Println("[connectWithRetries] tunnel.Connect failed. Error:", err)
+		time.Sleep(time.Second * 2)
 
-	fmt.Printf("Connected to server at %s\n", serverAddress)
-
-	randomInt := strconv.Itoa(rand.Intn(1000))
-	if _, err := conn.Write([]byte("Hello from a different IP " + randomInt + "!\n")); err != nil {
-		log.Fatal(err)
+		connectWithRetries(serverAddress)
 	}
 
-	// @TODO evaluate message starting with $ as command
-	// otherwise just type text in new file
-	for {
-		buf := make([]byte, 1024)
-		n, err := conn.Read(buf)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				log.Println("[client_main] server closed connection")
-				return
-			}
-			log.Println("[client_main] read failed: ", err.Error())
-			return
-		}
-
-		fmt.Printf("Received msg: %s\n", string(buf[:n]))
+	err = tunnel.Run()
+	if err != nil {
+		log.Println("[connectWithRetries] tunnel.Run failed. Error:", err)
 	}
+	time.Sleep(time.Second * 2)
+
+	connectWithRetries(serverAddress)
 }

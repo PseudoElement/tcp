@@ -12,9 +12,9 @@ type TcpService struct {
 	Tunnels map[TunnelID]*TcpTunnel
 }
 
-func NewTcpService(l net.Listener) *TcpService {
+func NewTcpService(listener net.Listener) *TcpService {
 	return &TcpService{
-		listener:  l,
+		listener:  listener,
 		uniqueInt: 0,
 		Tunnels:   make(map[TunnelID]*TcpTunnel),
 	}
@@ -42,5 +42,4 @@ func (t *TcpService) ListenConnectionRequests() {
 func (t *TcpService) handleTunnelClosing(tunnel *TcpTunnel) {
 	<-tunnel.CloseChan()
 	delete(t.Tunnels, tunnel.Id())
-	tunnel = nil
 }
