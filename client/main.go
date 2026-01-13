@@ -2,21 +2,13 @@ package main
 
 import (
 	"log"
-	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/pseudoelement/tcp/common"
 )
 
 func main() {
-	envPath := common.GetEnvPath()
-	if err := godotenv.Load(envPath); err != nil {
-		log.Fatalf("Error loading ../.env file. Error: %v\n", err)
-	}
-
-	serverIp := os.Getenv("SERVER_IP")
-	serverPort := os.Getenv("SERVER_PORT")
+	serverPort, serverIp := common.GetServerPortAndIp(true)
 	serverAddress := serverIp + ":" + serverPort
 
 	connectWithRetries(serverAddress)
@@ -31,6 +23,7 @@ func connectWithRetries(serverAddress string) {
 		time.Sleep(time.Second * 2)
 
 		connectWithRetries(serverAddress)
+		return
 	}
 
 	err = tunnel.Run()

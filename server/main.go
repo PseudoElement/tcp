@@ -3,19 +3,12 @@ package main
 import (
 	"log"
 	"net"
-	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/pseudoelement/tcp/common"
 )
 
 func main() {
-	envPath := common.GetEnvPath()
-	if err := godotenv.Load(envPath); err != nil {
-		log.Fatalf("Error loading ../.env file. Error: %v\n", err)
-	}
-
-	serverPort := os.Getenv("SERVER_PORT")
+	serverPort, _ := common.GetServerPortAndIp(false)
 	serverAddress := ":" + serverPort
 
 	l, err := net.Listen("tcp", serverAddress)
